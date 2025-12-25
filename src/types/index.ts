@@ -4,6 +4,7 @@ export interface Equipement {
   marque: string | null;
   modele: string | null;
   num_serie: string | null;
+  qr_code?: string | null;
   service: string;
   date_acquisition: string;
   criticite: string;

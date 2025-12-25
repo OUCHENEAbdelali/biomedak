@@ -22,6 +22,7 @@ export default function EnhancedEquipment() {
     marque: '',
     modele: '',
     num_serie: '',
+    qr_code: '',
     service: 'Réanimation',
     statut: 'En service',
   });
@@ -78,6 +79,7 @@ export default function EnhancedEquipment() {
           marque: formData.marque,
           modele: formData.modele,
           num_serie: formData.num_serie,
+          qr_code: formData.qr_code,
           service: formData.service,
           statut: formData.statut,
         });
@@ -87,6 +89,7 @@ export default function EnhancedEquipment() {
           marque: formData.marque,
           modele: formData.modele,
           num_serie: formData.num_serie,
+          qr_code: formData.qr_code,
           service: formData.service,
           statut: formData.statut,
           criticite: 'Moyenne',
@@ -126,6 +129,7 @@ export default function EnhancedEquipment() {
       marque: '',
       modele: '',
       num_serie: '',
+      qr_code: '',
       service: 'Réanimation',
       statut: 'En service',
     });
@@ -135,7 +139,7 @@ export default function EnhancedEquipment() {
   const handleQRScan = (data: string) => {
     setFormData({
       ...formData,
-      num_serie: data,
+      qr_code: data,
     });
     setShowScanner(false);
   };
@@ -185,12 +189,19 @@ export default function EnhancedEquipment() {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <input
               type="text"
               placeholder="N° Série"
               value={formData.num_serie || ''}
               onChange={(e) => setFormData({ ...formData, num_serie: e.target.value })}
+              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+            <input
+              type="text"
+              placeholder="Code QR"
+              value={formData.qr_code || ''}
+              onChange={(e) => setFormData({ ...formData, qr_code: e.target.value })}
               className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
             <select
@@ -202,15 +213,16 @@ export default function EnhancedEquipment() {
               <option value="Bloc">Bloc Opératoire</option>
               <option value="Urgences">Urgences</option>
             </select>
-            <button
-              type="button"
-              onClick={() => setShowScanner(true)}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
-            >
-              <QrCode size={18} />
-              Scanner QR
-            </button>
           </div>
+
+          <button
+            type="button"
+            onClick={() => setShowScanner(true)}
+            className="px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors flex items-center justify-center gap-2"
+          >
+            <QrCode size={18} />
+            Scanner QR
+          </button>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <select

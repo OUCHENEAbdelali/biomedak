@@ -61,6 +61,7 @@ function create($input) {
     $marque = $input['marque'] ?? null;
     $modele = $input['modele'] ?? null;
     $num_serie = $input['num_serie'] ?? null;
+    $qr_code = $input['qr_code'] ?? null;
     $service = $input['service'] ?? 'Réanimation';
     $statut = $input['statut'] ?? 'En service';
     $criticite = $input['criticite'] ?? 'Moyenne';
@@ -70,11 +71,11 @@ function create($input) {
     }
 
     $stmt = $pdo->prepare("
-        INSERT INTO equipements (id, nom, marque, modele, num_serie, service, statut, criticite)
-        VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO equipements (id, nom, marque, modele, num_serie, qr_code, service, statut, criticite)
+        VALUES (UUID(), ?, ?, ?, ?, ?, ?, ?, ?)
     ");
 
-    $stmt->execute([$nom, $marque, $modele, $num_serie, $service, $statut, $criticite]);
+    $stmt->execute([$nom, $marque, $modele, $num_serie, $qr_code, $service, $statut, $criticite]);
 
     $id = $pdo->lastInsertId();
     $stmt = $pdo->prepare("SELECT * FROM equipements WHERE id = ?");
@@ -95,16 +96,17 @@ function update($id, $input) {
     $marque = $input['marque'] ?? null;
     $modele = $input['modele'] ?? null;
     $num_serie = $input['num_serie'] ?? null;
+    $qr_code = $input['qr_code'] ?? null;
     $service = $input['service'] ?? '';
     $statut = $input['statut'] ?? '';
 
     $stmt = $pdo->prepare("
         UPDATE equipements
-        SET nom = ?, marque = ?, modele = ?, num_serie = ?, service = ?, statut = ?
+        SET nom = ?, marque = ?, modele = ?, num_serie = ?, qr_code = ?, service = ?, statut = ?
         WHERE id = ?
     ");
 
-    $stmt->execute([$nom, $marque, $modele, $num_serie, $service, $statut, $id]);
+    $stmt->execute([$nom, $marque, $modele, $num_serie, $qr_code, $service, $statut, $id]);
 
     $stmt = $pdo->prepare("SELECT * FROM equipements WHERE id = ?");
     $stmt->execute([$id]);

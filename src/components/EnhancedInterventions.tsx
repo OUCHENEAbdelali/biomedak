@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { equipementsAPI, interventionsAPI } from '../lib/api';
 import { Equipement, InterventionWithEquipment } from '../types';
-import { Plus, CheckCircle, AlertCircle, Download, Search } from 'lucide-react';
+import { Plus, CheckCircle, AlertCircle, Download, Search, Clock } from 'lucide-react';
 import { exportToCSV } from '../lib/export';
+import InterventionClosureModal from './InterventionClosureModal';
 
 export default function EnhancedInterventions() {
   const [interventions, setInterventions] = useState<InterventionWithEquipment[]>([]);
@@ -19,6 +20,8 @@ export default function EnhancedInterventions() {
   const [closureData, setClosureData] = useState<{ [key: string]: { cause: string; actions: string } }>({});
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [selectedInterventionId, setSelectedInterventionId] = useState<string | null>(null);
+  const [isClosing, setIsClosing] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -91,25 +94,24 @@ export default function EnhancedInterventions() {
     }
   };
 
-  const handleCloseOT = async (otId: string) => {
-    const data = closureData[otId];
-    if (!data?.cause || !data?.actions) {
-      alert('Veuillez remplir la cause et les actions');
-      return;
-    }
+  const handleCloseOT = async (cause: string, actions: string) => {
+    if (!selectedInterventionId) return;
 
+    setIsClosing(true);
     try {
-      await interventionsAPI.update(otId, {
-        cause_panne: data.cause,
-        actions_prises: data.actions,
+      await interventionsAPI.update(selectedInterventionId, {
+        cause_panne: cause,
+        actions_prises: actions,
         statut_ot: 'Clôturé',
       });
 
-      setClosureData({ ...closureData, [otId]: { cause: '', actions: '' } });
+      setSelectedInterventionId(null);
       loadData();
     } catch (error) {
       console.error('Error closing OT:', error);
       alert('Erreur lors de la clôture de l\'OT');
+    } finally {
+      setIsClosing(false);
     }
   };
 
@@ -129,13 +131,14 @@ export default function EnhancedInterventions() {
     exportToCSV(exportData, 'interventions');
   };
 
-  const updateClosureData = (otId: string, field: 'cause' | 'actions', value: string) => {
-    setClosureData({
-      ...closureData,
-      [otId]: {
-        ...closureData[otId],
-        [field]: value,
-      },
+  const formatDate = (dateString: string | null): string => {
+    if (!dateString) return 'N/A';
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
     });
   };
 
@@ -267,6 +270,8 @@ export default function EnhancedInterventions() {
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Équipement</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Description</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Technicien</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Créée</th>
+                  <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Clôturée</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Statut</th>
                   <th className="text-left py-3 px-4 text-sm font-semibold text-gray-700">Action</th>
                 </tr>
@@ -278,6 +283,13 @@ export default function EnhancedInterventions() {
                     <td className="py-3 px-4 text-gray-800">{ot.equipement?.nom}</td>
                     <td className="py-3 px-4 text-gray-600 max-w-xs truncate">{ot.description}</td>
                     <td className="py-3 px-4 text-gray-600">{ot.technicien}</td>
+                    <td className="py-3 px-4 text-gray-600 text-sm flex items-center gap-1">
+                      <Clock size={14} className="text-gray-400" />
+                      {formatDate(ot.date_creation)}
+                    </td>
+                    <td className="py-3 px-4 text-gray-600 text-sm">
+                      {ot.date_cloture ? formatDate(ot.date_cloture) : '-'}
+                    </td>
                     <td className="py-3 px-4">
                       <span
                         className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-semibold ${
@@ -292,28 +304,12 @@ export default function EnhancedInterventions() {
                     </td>
                     <td className="py-3 px-4">
                       {ot.statut_ot === 'Ouvert' ? (
-                        <div className="flex gap-2 items-center flex-wrap">
-                          <input
-                            type="text"
-                            placeholder="Cause"
-                            value={closureData[ot.id]?.cause || ''}
-                            onChange={(e) => updateClosureData(ot.id, 'cause', e.target.value)}
-                            className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent w-28"
-                          />
-                          <input
-                            type="text"
-                            placeholder="Actions"
-                            value={closureData[ot.id]?.actions || ''}
-                            onChange={(e) => updateClosureData(ot.id, 'actions', e.target.value)}
-                            className="px-2 py-1 text-xs border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-transparent w-28"
-                          />
-                          <button
-                            onClick={() => handleCloseOT(ot.id)}
-                            className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 transition-colors whitespace-nowrap"
-                          >
-                            Clôturer
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => setSelectedInterventionId(ot.id)}
+                          className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors whitespace-nowrap"
+                        >
+                          Clôturer
+                        </button>
                       ) : (
                         <span className="text-sm text-gray-500">Clôturé</span>
                       )}
@@ -325,6 +321,13 @@ export default function EnhancedInterventions() {
           </div>
         )}
       </div>
+
+      <InterventionClosureModal
+        isOpen={selectedInterventionId !== null}
+        onClose={() => setSelectedInterventionId(null)}
+        onSubmit={handleCloseOT}
+        isLoading={isClosing}
+      />
     </div>
   );
 }
