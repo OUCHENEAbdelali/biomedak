@@ -9,7 +9,7 @@ interface LayoutProps {
 }
 
 export default function EnhancedLayout({ children, currentPage, onNavigate }: LayoutProps) {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [profileOpen, setProfileOpen] = useState(false);
 
@@ -102,7 +102,7 @@ export default function EnhancedLayout({ children, currentPage, onNavigate }: La
                 className="flex items-center gap-2 px-4 py-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-                  U
+                  {user?.full_name?.charAt(0).toUpperCase() || 'U'}
                 </div>
               </button>
             </div>

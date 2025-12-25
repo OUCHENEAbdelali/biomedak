@@ -110,3 +110,12 @@ export const statsAPI = {
     return fetchAPI('/stats.php');
   },
 };
+
+export const profileAPI = {
+  async update(fullName: string) {
+    return fetchAPI('/profile.php', {
+      method: 'PUT',
+      body: JSON.stringify({ full_name: fullName }),
+    });
+  },
+};

@@ -122,7 +122,14 @@ function create($input) {
         ");
         $stmt->execute([$equipement_id, $type_maint, $description, $priorite, $technicien, $statut_ot]);
 
-        if ($type_maint === 'Corrective') {
+        $stmt = $pdo->prepare("SELECT statut FROM equipements WHERE id = ?");
+        $stmt->execute([$equipement_id]);
+        $equipement = $stmt->fetch();
+
+        if ($equipement && $equipement['statut'] === 'En panne') {
+            $stmt = $pdo->prepare("UPDATE equipements SET statut = 'En maintenance' WHERE id = ?");
+            $stmt->execute([$equipement_id]);
+        } elseif ($type_maint === 'Corrective' && $equipement && $equipement['statut'] === 'En service') {
             $stmt = $pdo->prepare("UPDATE equipements SET statut = 'En panne' WHERE id = ?");
             $stmt->execute([$equipement_id]);
         }

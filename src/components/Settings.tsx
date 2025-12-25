@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '../lib/auth-context';
+import { profileAPI } from '../lib/api';
 import { Save } from 'lucide-react';
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, refreshUser } = useAuth();
   const [profile, setProfile] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
@@ -26,6 +27,8 @@ export default function Settings() {
   const handleSave = async () => {
     setSaving(true);
     try {
+      await profileAPI.update(profile.full_name);
+      await refreshUser();
       setMessage({ type: 'success', text: 'Profil mis à jour avec succès!' });
       setTimeout(() => setMessage(null), 3000);
     } catch (error) {
